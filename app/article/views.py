@@ -6,7 +6,7 @@ from core.models import Category
 from article import serializers
 
 
-class CategoryViewset(viewsets.GenericViewSet, mixins.ListModelMixin):
+class CategoryViewset(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin):
     authentication_classes = (TokenAuthentication,)
     permission_classes = (IsAuthenticated,)
     serializer_class = serializers.CategorySerializer
@@ -14,3 +14,6 @@ class CategoryViewset(viewsets.GenericViewSet, mixins.ListModelMixin):
 
     def get_queryset(self):
         return self.queryset.filter(author=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
