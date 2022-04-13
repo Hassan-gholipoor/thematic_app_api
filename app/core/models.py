@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
-
+from django.conf import settings
 
 class UserManager(BaseUserManager):
 
@@ -31,9 +31,6 @@ class UserManager(BaseUserManager):
         return user
 
 
-
-
-
 class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
@@ -43,3 +40,13 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
     USERNAME_FIELD = "email"
+
+
+class Category(models.Model):
+    title = models.CharField(max_length=122, unique=True)
+    slug = models.SlugField(max_length=155, unique=True)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.title
+

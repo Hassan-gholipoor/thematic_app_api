@@ -1,6 +1,11 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 
+from core import models
+
+
+def sample_user(email='test@gmail.com', password='testpass'):
+    return get_user_model().objects.create_user(email, password)
 
 class ModelTests(TestCase):
 
@@ -33,3 +38,8 @@ class ModelTests(TestCase):
         user = get_user_model().objects.create_author_user(email='test@gmail.com', password='testpass')
 
         self.assertTrue(user.is_author)
+
+    def test_string_representation_for_category(self):
+        category1 = models.Category.objects.create(title='sport', slug='sport', author=sample_user())
+
+        self.assertEqual(str(category1), 'sport')
