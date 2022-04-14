@@ -3,12 +3,12 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from core.models import Category
-from article import serializers
+from article import serializers, permissions
 
 
 class CategoryViewset(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.CreateModelMixin):
     authentication_classes = (TokenAuthentication,)
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, permissions.AuthorAccessPermission)
     serializer_class = serializers.CategorySerializer
     queryset = Category.objects.all()
 

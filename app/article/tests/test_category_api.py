@@ -22,6 +22,16 @@ class PublicCategoryAPITests(TestCase):
         res = self.client.get(CATEGORY_URLS)
 
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+    
+    def test_user_must_author_to_access(self):
+        user = get_user_model().objects.create_user(
+            'testuser@gmail.com',
+            'testuserpassword'
+        )
+        self.client.force_authenticate(user)
+        res = self.client.get(CATEGORY_URLS)
+        
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
 
 class PrivateCategoryAPITests(TestCase):
@@ -32,11 +42,15 @@ class PrivateCategoryAPITests(TestCase):
             'test@gmail.com',
             'testpass'
         )
-        self.client.force_authenticate(self.user)
+        self.author = get_user_model().objects.create_author_user(
+            'author@gmail.com',
+            'testpassword'
+        )
+        self.client.force_authenticate(self.author)
 
     def test_retrieve_categories(self):
-        Category.objects.create(title='sport', slug='sport', author=self.user)
-        Category.objects.create(title='global', slug='global', author=self.user)
+        Category.objects.create(title='sport', slug='sport', author=self.author)
+        Category.objects.create(title='global', slug='global', author=self.author)
 
         res = self.client.get(CATEGORY_URLS)
 
@@ -45,10 +59,9 @@ class PrivateCategoryAPITests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
 
-    def test_categories_limited_to_user(self):
-        user2 = get_user_model().objects.create_user('other@gmail.com', 'testpassword')
-        Category.objects.create(title='sport', slug='sport', author=user2)
-        category = Category.objects.create(title='casual', slug='casual', author=self.user)
+    def test_categories_limited_to_author_user(self):
+        Category.objects.create(title='sport', slug='sport', author=self.user)
+        category = Category.objects.create(title='casual', slug='casual', author=self.author)
         
         res = self.client.get(CATEGORY_URLS)
 
@@ -64,7 +77,7 @@ class PrivateCategoryAPITests(TestCase):
         self.client.post(CATEGORY_URLS, payload)
 
         exists = Category.objects.filter(
-            author=self.user,
+            author=self.author,
             title=payload['title'],
             slug=payload['slug']
         ).exists()
