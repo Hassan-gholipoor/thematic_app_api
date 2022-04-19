@@ -43,3 +43,21 @@ class ModelTests(TestCase):
         category1 = models.Category.objects.create(title='sport', slug='sport', author=sample_user())
 
         self.assertEqual(str(category1), 'sport')
+
+    def test_string_representaion_for_article(self):
+        user = get_user_model().objects.create_author_user(
+            email='authoruser@gmail.com',
+            password='testauthorpassword',
+            name='testname'
+        )
+        category = models.Category.objects.create(title='sport', slug='sport', author=user)
+
+        article = models.Article.objects.create(
+            title='Barcelona vs Real Madrid', 
+            description='blah blah blah',
+            slug='barmadrid',
+            owner=user
+            )
+        article.categories.set((category.id,))
+
+        self.assertEqual(str(article), 'Barcelona vs Real Madrid')

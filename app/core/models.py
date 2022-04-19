@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.conf import settings
@@ -50,3 +51,14 @@ class Category(models.Model):
     def __str__(self):
         return self.title
 
+
+class Article(models.Model):
+    title = models.CharField(max_length=155)
+    description = models.TextField()
+    slug = models.SlugField(max_length=155, unique=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    categories = models.ManyToManyField(Category, related_name='articles')
+    publish_date = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.title
