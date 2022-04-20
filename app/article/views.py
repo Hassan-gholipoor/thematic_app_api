@@ -24,6 +24,18 @@ class ArticleViewSet(viewsets.GenericViewSet, mixins.ListModelMixin, mixins.Retr
     serializer_class = serializers.ArticleSerializer
     queryset = Article.objects.all()
 
+    def _ids_to_intiger(self, string):
+        return [int(str_id) for str_id in string.split(',')]
+
+    def get_queryset(self):
+        categories = self.request.query_params.get('categories')
+        queryset = self.queryset
+        if categories:
+            cat_ids = self._ids_to_intiger(categories)
+            queryset = queryset.filter(categories__id__in=cat_ids)
+        
+        return queryset
+
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return serializers.ArticleDetailSerializer
@@ -36,13 +48,23 @@ class AuthorArticleAPIView(viewsets.ModelViewSet):
     serializer_class = serializers.ArticleSerializer
     queryset = Article.objects.all()
 
+    def _ids_to_intiger(self, string):
+        return [int(str_id) for str_id in string.split(',')]
+
+
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return serializers.ArticleDetailSerializer
         return self.serializer_class
 
     def get_queryset(self):
-        return self.queryset.filter(owner=self.request.user)
+        categories = self.request.query_params.get('categories')
+        queryset = self.queryset
+        if categories:
+            cat_ids = self._ids_to_intiger(categories)
+            queryset = queryset.filter(categories__id__in=cat_ids)
+        
+        return queryset.filter(owner=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)

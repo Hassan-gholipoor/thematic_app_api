@@ -185,3 +185,29 @@ class PrivateAuthorArticleApiTests(TestCase):
         self.assertEqual(article.title, payload['title'])
         categories = article.categories.all()
         self.assertEqual(len(categories), 1)
+
+    
+    def test_retrieve_articles_filtered_by_catgories(self):
+        cate1 = Category.objects.create(title='sport', slug='sport', author=self.author_user)
+        cate2 = Category.objects.create(title='global', slug='global', author=self.author_user)
+        article1 = Article.objects.create(
+            title='A test title',
+            description='a test description for a test article',
+            slug='testTitle',
+            owner=self.author_user,
+        )
+        article2 = Article.objects.create(
+            title='Another Test Article',
+            description='a test description for another test article',
+            slug='anotherslug',
+            owner=self.author_user,
+        )
+        article1.categories.set((cate1.id,))
+        article2.categories.set((cate2.id,))
+
+        res = self.client.get(AUTHOR_ARTICLES_URL, {'categories': f'{cate1.id}'})
+
+        serializer1 = ArticleSerializer(article1)
+        serializer2 = ArticleSerializer(article2)
+        self.assertIn(serializer1.data, res.data)
+        self.assertNotIn(serializer2.data, res.data)
