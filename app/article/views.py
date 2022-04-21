@@ -1,8 +1,7 @@
 from rest_framework import viewsets, mixins
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-
-from core.models import Category, Article
+from core.models import Category, Article, Comment
 from article import serializers
 from article import permissions as CustomePermissions
 
@@ -68,3 +67,16 @@ class AuthorArticleAPIView(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+
+class CommentViewset(viewsets.ModelViewSet):
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAuthenticated,)
+    serializer_class = serializers.CommentSerializer
+    queryset = Comment.objects.all()
+
+    def get_queryset(self):
+        return self.queryset.filter(author=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
