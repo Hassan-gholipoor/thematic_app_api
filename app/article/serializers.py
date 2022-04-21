@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from core.models import Category, Article, Comment
+from user.serializers import UserSerializer
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -29,3 +30,8 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ('id', 'article', 'body', 'author', 'created_on')
         read_only_fields = ('id', 'author')
+
+
+class CommentDetailSerializer(CommentSerializer):
+    article = ArticleDetailSerializer(read_only=True)
+    author = UserSerializer(read_only=True)

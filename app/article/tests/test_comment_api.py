@@ -7,10 +7,13 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from core.models import Comment, Article, Category
-from article.serializers import CommentSerializer
+from article.serializers import CommentSerializer, CommentDetailSerializer
 
 
 COMMENT_URL = reverse('article:comment-list')
+
+def comment_detail(pk):
+    return reverse('article:comment-detail', args=[pk])
 
 
 class PublicCommentApiTests(TestCase):
@@ -105,5 +108,25 @@ class PrivateCommentAPITests(TestCase):
         res = self.client.post(COMMENT_URL, comment_payload)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_comment_detail_page(self):
+        cate1 = Category.objects.create(title='sport', slug='sport', author=self.author_user)
+        cate2 = Category.objects.create(title='casual', slug='casual', author=self.author_user)
+        article = Article.objects.create(
+            title = 'A test article',
+            description = 'Test description for above article',
+            slug = 'SestSlug',
+            owner = self.author_user
+        )
+        article.categories.set((cate1.id, cate2.id))
+        cm = Comment.objects.create(article=article, author=self.user, body='Good Article')
+        article.comments.set((cm,))
+
+        url = comment_detail(cm.id)
+        res = self.client.get(url)
+
+        serializer = CommentDetailSerializer(cm)
+        self.assertEqual(res.data, serializer.data)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
 
 

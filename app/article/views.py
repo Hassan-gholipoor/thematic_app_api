@@ -75,6 +75,11 @@ class CommentViewset(viewsets.ModelViewSet):
     serializer_class = serializers.CommentSerializer
     queryset = Comment.objects.all()
 
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return serializers.CommentDetailSerializer
+        return self.serializer_class
+
     def get_queryset(self):
         return self.queryset.filter(author=self.request.user)
 
