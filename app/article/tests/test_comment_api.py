@@ -129,4 +129,56 @@ class PrivateCommentAPITests(TestCase):
         self.assertEqual(res.data, serializer.data)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
 
+    def test_partial_update_success(self):
+        cate1 = Category.objects.create(title='sport', slug='sport', author=self.author_user)
+        cate2 = Category.objects.create(title='casual', slug='casual', author=self.author_user)
+        article = Article.objects.create(
+            title = 'A test article',
+            description = 'Test description for above article',
+            slug = 'SestSlug',
+            owner = self.author_user
+        )
+        article.categories.set((cate1.id, cate2.id))
+        cm = Comment.objects.create(article=article, author=self.user, body='Good Article')
+        article.comments.set((cm,))
 
+        payload = {
+            "body": "Not funny"
+        }
+
+        url = comment_detail(cm.id)
+        res = self.client.patch(url, payload)
+        cm.refresh_from_db()
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(cm.body, payload['body'])
+
+    def test_full_update_success(self):
+        cate1 = Category.objects.create(title='sport', slug='sport', author=self.author_user)
+        cate2 = Category.objects.create(title='casual', slug='casual', author=self.author_user)
+        article = Article.objects.create(
+            title = 'A test article',
+            description = 'Test description for above article',
+            slug = 'SestSlug',
+            owner = self.author_user
+        )
+        article.categories.set((cate1.id, cate2.id))
+        cm = Comment.objects.create(article=article, author=self.user, body='Good Article')
+        article.comments.set((cm,))
+
+        test_user = get_user_model().objects.create_user(
+            'testuser@gmail.com',
+            'testpassword',
+        )
+
+        payload = {
+            "article": article.id,
+            "author": test_user,
+            "body": "Another Test Body",
+        }
+        url = comment_detail(cm.id)
+        res = self.client.put(url, payload)
+        cm.refresh_from_db()
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(cm.body, payload['body'])
