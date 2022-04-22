@@ -12,6 +12,15 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = ('id',)
 
 
+class AbbreviateCommentSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = Comment
+        fields = ('id', 'body', 'author', 'created_on')
+        read_only_fields = ('id', 'author')
+
+
 class ArticleSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -20,8 +29,14 @@ class ArticleSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'owner')
 
 
-class ArticleDetailSerializer(ArticleSerializer):
+class ArticleDetailSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True)
+    comments = AbbreviateCommentSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Article
+        fields = ('id', 'title', 'description', 'slug', 'owner', 'categories', 'publish_date', 'comments')
+        read_only_fields = ('id', 'owner')
 
 
 class CommentSerializer(serializers.ModelSerializer):

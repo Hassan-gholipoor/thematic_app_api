@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Article, Category
+from core.models import Article, Category, Comment
 from article.serializers import ArticleSerializer, ArticleDetailSerializer
 
 
@@ -57,6 +57,7 @@ class PublicArticlesAPITests(TestCase):
             owner=self.author_user,
         )
         article.categories.set((cate1.id, cate2.id))
+        cm = Comment.objects.create(article=article, author=self.author_user, body='Good One')
         serializer = ArticleDetailSerializer(article)
 
         url = detail_url(article.id)

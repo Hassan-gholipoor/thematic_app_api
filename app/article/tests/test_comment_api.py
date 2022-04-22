@@ -164,7 +164,6 @@ class PrivateCommentAPITests(TestCase):
         )
         article.categories.set((cate1.id, cate2.id))
         cm = Comment.objects.create(article=article, author=self.user, body='Good Article')
-        article.comments.set((cm,))
 
         test_user = get_user_model().objects.create_user(
             'testuser@gmail.com',

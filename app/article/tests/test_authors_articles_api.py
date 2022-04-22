@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Article, Category
+from core.models import Article, Category, Comment
 from article.serializers import ArticleSerializer, ArticleDetailSerializer
 
 
@@ -131,6 +131,7 @@ class PrivateAuthorArticleApiTests(TestCase):
             owner=self.author_user
         )
         article.categories.set((cate1.id, cate2.id))
+        cm = Comment.objects.create(article=article, author=self.author_user, body="Hahaha Funny")
         url = detail_url(article.id)
         res = self.client.get(url)
         serializer = ArticleDetailSerializer(article)
