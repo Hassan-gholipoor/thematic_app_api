@@ -25,3 +25,9 @@ class ManageUserView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+
+    def get_serializer_class(self):
+        if self.request.user.is_author:
+            return AuthorSerializer
+        
+        return self.serializer_class
