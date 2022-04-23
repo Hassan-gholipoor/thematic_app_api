@@ -1,6 +1,9 @@
-from rest_framework import viewsets, mixins
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import viewsets, mixins, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+
 from core.models import Category, Article, Comment
 from article import serializers
 from article import permissions as CustomePermissions
@@ -50,10 +53,11 @@ class AuthorArticleAPIView(viewsets.ModelViewSet):
     def _ids_to_intiger(self, string):
         return [int(str_id) for str_id in string.split(',')]
 
-
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return serializers.ArticleDetailSerializer
+        elif self.action == 'upload_image':
+            return serializers.ArticleImageSerializer
         return self.serializer_class
 
     def get_queryset(self):
@@ -67,6 +71,25 @@ class AuthorArticleAPIView(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    @action(methods=['POST'], detail=True, url_path='upload-image')
+    def upload_image(self, request, pk=None):
+        article = self.get_object()
+        serializer = self.get_serializer(
+            article,
+            data=request.data
+        )            
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class CommentViewset(viewsets.ModelViewSet):

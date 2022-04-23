@@ -50,3 +50,11 @@ class CommentSerializer(serializers.ModelSerializer):
 class CommentDetailSerializer(CommentSerializer):
     article = ArticleDetailSerializer(read_only=True)
     author = UserSerializer(read_only=True)
+
+
+class ArticleImageSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Article
+        fields = ('id', 'image')
+        read_only_fields = ('id',)

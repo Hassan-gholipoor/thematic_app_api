@@ -1,3 +1,10 @@
+from email.mime import multipart
+from http import client
+import tempfile
+import os
+
+from PIL import Image
+
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -10,6 +17,10 @@ from article.serializers import ArticleSerializer, ArticleDetailSerializer
 
 
 AUTHOR_ARTICLES_URL = reverse('article:authors-articles-list')
+
+
+def image_upload_url(article_id):
+    return reverse('article:authors-articles-upload-image', args=[article_id])
 
 
 def detail_url(pk):
@@ -212,3 +223,45 @@ class PrivateAuthorArticleApiTests(TestCase):
         serializer2 = ArticleSerializer(article2)
         self.assertIn(serializer1.data, res.data)
         self.assertNotIn(serializer2.data, res.data)
+
+
+class ArticleImageUploadTests(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.author_user = get_user_model().objects.create_author_user(
+            'authormail@gmail.com',
+            'testpassauthor'
+        )
+        self.client.force_authenticate(self.author_user)
+        cate1 = Category.objects.create(title='sport', slug='sport', author=self.author_user)
+        self.article = Article.objects.create(
+            title = 'A test article',
+            description = 'Test description for above article',
+            slug = 'SestSlug',
+            owner=self.author_user
+        )
+        self.article.categories.set((cate1.id,))
+
+    def tearDown(self):
+        self.article.image.delete()
+
+    def test_upload_image_to_article(self):
+        url = image_upload_url(self.article.id)
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:
+            img = Image.new('RGB', (10, 10))
+            img.save(ntf, format='JPEG')
+            ntf.seek(0)
+            res = self.client.post(url, {'image': ntf}, format='multipart')
+
+        self.article.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.article.image.path))
+
+    def test_upload_image_bad_request(self):
+        url = image_upload_url(self.article.id)
+        res = self.client.post(url, {'image': 'not iamge'}, format='multipart')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
