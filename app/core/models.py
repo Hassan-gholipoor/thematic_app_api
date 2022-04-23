@@ -1,7 +1,16 @@
+import uuid
+import os
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.conf import settings
+
+
+def article_image_file_path(instance, filename):
+    ext = filename.split('.')[-1]
+    filename = f'{uuid.uuid4()}.{ext}'
+    return os.path.join('uploads/article/', filename)
+
 
 class UserManager(BaseUserManager):
 
@@ -57,6 +66,7 @@ class Article(models.Model):
     description = models.TextField()
     slug = models.SlugField(max_length=155, unique=True)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    image = models.ImageField(null=True, upload_to=article_image_file_path)
     categories = models.ManyToManyField(Category, related_name='articles')
     publish_date = models.DateTimeField(default=timezone.now)
 
