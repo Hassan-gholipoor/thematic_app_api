@@ -16,36 +16,18 @@ from core.models import Article, Category, Comment
 from article.serializers import ArticleSerializer, ArticleDetailSerializer
 
 
-AUTHOR_ARTICLES_URL = reverse('article:authors-articles-list')
-
+ARTICLE_URL = reverse('article:article-list')
 
 def image_upload_url(article_id):
-    return reverse('article:authors-articles-upload-image', args=[article_id])
+    return reverse('article:article-upload-image', args=[article_id])
+
+
+def like_url(article_id):
+    return reverse('article:article-add-like', args=[article_id])
 
 
 def detail_url(pk):
-    return reverse('article:authors-articles-detail', args=[pk])
-
-
-class PublicAPITests(TestCase):
-
-    def setUp(self):
-        self.client = APIClient()
-
-    def test_login_required(self):
-        res = self.client.get(AUTHOR_ARTICLES_URL)
-
-        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
-
-    def test_users_must_author_to_access(self):
-        user = get_user_model().objects.create_user(
-            'testmail@gmail.com',
-            'testpassword'
-        )
-        self.client.force_authenticate(user)
-        res = self.client.get(AUTHOR_ARTICLES_URL)
-
-        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+    return reverse('article:article-detail', args=[pk])
 
 
 class PrivateAuthorArticleApiTests(TestCase):
@@ -73,37 +55,12 @@ class PrivateAuthorArticleApiTests(TestCase):
         )
         article.categories.set((cate1.id, cate2.id))
 
-        res = self.client.get(AUTHOR_ARTICLES_URL)
+        res = self.client.get(ARTICLE_URL)
 
-        articles = Article.objects.all().order_by('-id')
+        articles = Article.objects.all()
         serializer = ArticleSerializer(articles, many=True)
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res.data, serializer.data)
-    
-    def test_articles_limmited_to_author(self):
-        cate1 = Category.objects.create(title='sport', slug='sport', author=self.author_user)
-        cate2 = Category.objects.create(title='casual', slug='casual', author=self.author_user)
-        article = Article.objects.create(
-            title = 'A test article',
-            description = 'Test description for above article',
-            slug = 'SestSlug',
-            owner=self.author_user
-        )
-        article.categories.set((cate1.id, cate2.id))
-
-        cate3 = Category.objects.create(title='Sea News', slug='SeaNews', author=self.another_author_user)
-        article2 = Article.objects.create(
-            title = 'A new test article',
-            description = 'Test description for above article',
-            slug = 'newslug',
-            owner=self.another_author_user
-        )
-        article.categories.set((cate3.id,))
-
-        res = self.client.get(AUTHOR_ARTICLES_URL)
-
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(res.data), 1)
 
     def test_create_article_successful(self):
         cate1 = Category.objects.create(title='sport', slug='sport', author=self.author_user)
@@ -113,7 +70,7 @@ class PrivateAuthorArticleApiTests(TestCase):
             "slug": "Test",
             "categories": [cate1.id]
         }
-        res = self.client.post(AUTHOR_ARTICLES_URL, payload)
+        res = self.client.post(ARTICLE_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
         exists = Article.objects.filter(
@@ -128,7 +85,7 @@ class PrivateAuthorArticleApiTests(TestCase):
         payload = {
             "title": "",
         }
-        res = self.client.post(AUTHOR_ARTICLES_URL, payload)
+        res = self.client.post(ARTICLE_URL, payload)
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -188,7 +145,7 @@ class PrivateAuthorArticleApiTests(TestCase):
             "title":"New Title for puh updata",
             "description":"Changing article",
             "slug":"changed",
-            "categories": [cate2.id] 
+            "categories": [cate2.id]
         }
         res = self.client.put(url, payload)
         article.refresh_from_db()
@@ -198,7 +155,7 @@ class PrivateAuthorArticleApiTests(TestCase):
         categories = article.categories.all()
         self.assertEqual(len(categories), 1)
 
-    
+
     def test_retrieve_articles_filtered_by_catgories(self):
         cate1 = Category.objects.create(title='sport', slug='sport', author=self.author_user)
         cate2 = Category.objects.create(title='global', slug='global', author=self.author_user)
@@ -217,7 +174,7 @@ class PrivateAuthorArticleApiTests(TestCase):
         article1.categories.set((cate1.id,))
         article2.categories.set((cate2.id,))
 
-        res = self.client.get(AUTHOR_ARTICLES_URL, {'categories': f'{cate1.id}'})
+        res = self.client.get(ARTICLE_URL, {'categories': f'{cate1.id}'})
 
         serializer1 = ArticleSerializer(article1)
         serializer2 = ArticleSerializer(article2)
@@ -265,3 +222,39 @@ class ArticleImageUploadTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
+
+class ArticleLikeAPITests(TestCase):
+
+    def setUp(self):
+        self.client = APIClient()
+        self.author_user = get_user_model().objects.create_author_user(
+            'authormail@gmail.com',
+            'testpassauthor'
+        )
+        self.client.force_authenticate(self.author_user)
+        cate1 = Category.objects.create(title='sport', slug='sport', author=self.author_user)
+        self.article = Article.objects.create(
+            title = 'A test article',
+            description = 'Test description for above article',
+            slug = 'SestSlug',
+            owner=self.author_user
+        )
+        self.article.categories.set((cate1.id,))
+
+    def test_liking_article_successful(self):
+        normal_user = get_user_model().objects.create_user(
+            'testnormaluser@gmail.com',
+            'testpassword'
+        )
+        self.article.like.set((normal_user.id,))
+        url = like_url(self.article.id)
+        payload = {
+            'like': [self.author_user.id]
+        }
+        res = self.client.patch(url, payload)
+        self.article.refresh_from_db()
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('like', res.data)
+        self.assertEqual(len(res.data['like']), 2)
+        self.assertIn(self.author_user, self.article.like.all())

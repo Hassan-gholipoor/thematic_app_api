@@ -20,39 +20,17 @@ class PublicArticlesAPITests(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-
-    def test_retrieves_article(self):
         self.author_user = get_user_model().objects.create_author_user(
-            'testauthor@gmail.com',
-            'testauthorpass'
+            'authormail@gmail.com',
+            'testpassword'
         )
-        cate1 = Category.objects.create(title='sport', slug='sport', author=self.author_user)
-        cate2 = Category.objects.create(title='global', slug='global', author=self.author_user)
-        article = Article.objects.create(
-            title='A test title',
-            description='a test description for a test article',
-            slug='testTitle',
-            owner=self.author_user,
-        )
-        article.categories.set((cate1.id, cate2.id))
 
-        res = self.client.get(ARTICLE_URL)
-
-        articles = Article.objects.all().order_by('-id')
-        serializer = ArticleSerializer(articles, many=True)
-        self.assertEqual(res.data, serializer.data)
-        self.assertEqual(res.status_code, status.HTTP_200_OK)
-        
     def test_view_article_detail(self):
-        self.author_user = get_user_model().objects.create_author_user(
-            'testauthor@gmail.com',
-            'testauthorpass'
-        )
         cate1 = Category.objects.create(title='sport', slug='sport', author=self.author_user)
         cate2 = Category.objects.create(title='global', slug='global', author=self.author_user)
         article = Article.objects.create(
-            title='A test title',
-            description='a test description for a test article',
+            title='A',
+            description='article',
             slug='testTitle',
             owner=self.author_user,
         )
@@ -67,21 +45,17 @@ class PublicArticlesAPITests(TestCase):
         self.assertEqual(res.data, serializer.data)
 
     def test_retrieve_articles_filtered_by_catgories(self):
-        self.author_user = get_user_model().objects.create_author_user(
-            'testauthor@gmail.com',
-            'testauthorpass'
-        )
         cate1 = Category.objects.create(title='sport', slug='sport', author=self.author_user)
         cate2 = Category.objects.create(title='global', slug='global', author=self.author_user)
         article1 = Article.objects.create(
-            title='A test title',
-            description='a test description for a test article',
+            title='A new one',
+            description='a  description for article',
             slug='testTitle',
             owner=self.author_user,
         )
         article2 = Article.objects.create(
             title='Another Test Article',
-            description='a test description for another test article',
+            description='description for another test article',
             slug='anotherslug',
             owner=self.author_user,
         )

@@ -7,7 +7,6 @@ from article import views
 router = DefaultRouter()
 router.register('categories', views.CategoryViewset)
 router.register('articles', views.ArticleViewSet)
-router.register('authors/articles', views.AuthorArticleAPIView, basename='authors-articles')
 router.register('comments', views.CommentViewset)
 
 

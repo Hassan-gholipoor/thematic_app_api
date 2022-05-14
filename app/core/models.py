@@ -68,6 +68,7 @@ class Article(models.Model):
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     image = models.ImageField(null=True, upload_to=article_image_file_path)
     categories = models.ManyToManyField(Category, related_name='articles')
+    like = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='likes')
     publish_date = models.DateTimeField(default=timezone.now)
 
     def __str__(self):

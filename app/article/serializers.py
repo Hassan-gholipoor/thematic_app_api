@@ -58,3 +58,15 @@ class ArticleImageSerializer(serializers.ModelSerializer):
         model = Article
         fields = ('id', 'image')
         read_only_fields = ('id',)
+
+
+class ArticleAddLikeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Article
+        fields = ('id', 'like')
+        read_only_fields = ('id',)
+
+    def save(self):
+        user = self.validated_data.get('like')[0].id
+        like = self.instance.like.add(user)
