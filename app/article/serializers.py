@@ -21,11 +21,23 @@ class AbbreviateCommentSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'author')
 
 
+class ArticleAddLikeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Article
+        fields = ('id', 'like')
+        read_only_fields = ('id',)
+
+    def save(self):
+        user = self.validated_data.get('like')[0]
+        like = self.instance.like.add(user)
+
+
 class ArticleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Article
-        fields = ('id', 'title', 'description', 'slug', 'owner', 'categories', 'publish_date')
+        fields = ('id', 'title', 'description', 'slug', 'owner', 'categories', 'publish_date', 'like')
         read_only_fields = ('id', 'owner')
 
 
@@ -35,7 +47,7 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Article
-        fields = ('id', 'title', 'description', 'slug', 'owner', 'categories', 'publish_date', 'comments')
+        fields = ('id', 'title', 'description', 'slug', 'owner', 'categories', 'publish_date', 'comments', 'like')
         read_only_fields = ('id', 'owner')
 
 
@@ -58,15 +70,3 @@ class ArticleImageSerializer(serializers.ModelSerializer):
         model = Article
         fields = ('id', 'image')
         read_only_fields = ('id',)
-
-
-class ArticleAddLikeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Article
-        fields = ('id', 'like')
-        read_only_fields = ('id',)
-
-    def save(self):
-        user = self.validated_data.get('like')[0].id
-        like = self.instance.like.add(user)

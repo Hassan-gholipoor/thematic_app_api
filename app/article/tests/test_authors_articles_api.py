@@ -200,9 +200,6 @@ class ArticleImageUploadTests(TestCase):
         )
         self.article.categories.set((cate1.id,))
 
-    def tearDown(self):
-        self.article.image.delete()
-
     def test_upload_image_to_article(self):
         url = image_upload_url(self.article.id)
         with tempfile.NamedTemporaryFile(suffix='.jpg') as ntf:

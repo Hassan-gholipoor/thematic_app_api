@@ -52,6 +52,8 @@ class ArticleViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == "list" or  self.action == "retrieve":
             permission_classes = []
+        elif self.action == "add_like":
+            permission_classes = (IsAuthenticated,)
         else:
             permission_classes = (CustomePermissions.AuthorAccessPermission,)
 
@@ -84,7 +86,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
         article = self.get_object()
         serializer = self.get_serializer(
             article,
-            data=request.data
+            data={"like": [self.request.user.id]}
         )            
         if serializer.is_valid():
             serializer.save()
