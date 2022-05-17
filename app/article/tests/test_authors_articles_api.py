@@ -1,5 +1,3 @@
-from email.mime import multipart
-from http import client
 import tempfile
 import os
 
@@ -255,3 +253,15 @@ class ArticleLikeAPITests(TestCase):
         self.assertIn('like', res.data)
         self.assertEqual(len(res.data['like']), 2)
         self.assertIn(self.author_user, self.article.like.all())
+
+    def test_unlike_article_successful(self):
+        url = like_url(self.article.id)
+        self.article.like.set((self.author_user.id,))
+        payload = {
+            'like': [self.author_user.id]
+        }
+        res = self.client.delete(url, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('like', res.data)
+        self.assertNotIn(self.author_user.id, res.data['like'])

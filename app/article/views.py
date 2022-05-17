@@ -81,7 +81,7 @@ class ArticleViewSet(viewsets.ModelViewSet):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    @action(methods=['PATCH'], detail=True, url_path='add-like')
+    @action(methods=['PATCH', 'DELETE'], detail=True, url_path='add-like')
     def add_like(self, request, pk=None):
         article = self.get_object()
         serializer = self.get_serializer(
@@ -94,11 +94,10 @@ class ArticleViewSet(viewsets.ModelViewSet):
                 serializer.data,
                 status=status.HTTP_200_OK
             )
-
         return Response(
             serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
+            status=status.HTTP_400_BAD_REQUEST    
+        )    
 
 
 class CommentViewset(viewsets.ModelViewSet):

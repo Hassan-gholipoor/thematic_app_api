@@ -30,6 +30,9 @@ class ArticleAddLikeSerializer(serializers.ModelSerializer):
 
     def save(self):
         user = self.validated_data.get('like')[0]
+        if self.context.get('request').method == 'DELETE':
+            like = self.instance.like.remove(user)
+            return like
         like = self.instance.like.add(user)
 
 
